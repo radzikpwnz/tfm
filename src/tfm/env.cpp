@@ -4,7 +4,7 @@
 
 
 // Program version string
-const wchar_t ProgramVersion[] = L"v 1.0 Beta";
+const wchar_t ProgramVersion[] = L"v 1.0.0";
 
 // Desktop path
 static std::wstring gDesktopPath;
