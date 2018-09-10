@@ -1,2 +1,2 @@
-# tfm
-Tiny File Manager
+# Tiny File Manager
+Lightweight file manager for Windows.
