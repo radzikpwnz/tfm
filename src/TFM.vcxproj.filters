@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\MainWindow">
+      <UniqueIdentifier>{4b4c3d92-c076-4c58-89e4-15a4cff352f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MainWindow">
+      <UniqueIdentifier>{c09eafae-69fe-4f1e-b4ae-d14201ece5ac}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tfm\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\fsnode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\content_view.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\mainwnd.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\toolbar.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\treeview.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\statusbar.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\sizebar.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\stuff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\navbar.cpp">
+      <Filter>Source Files\MainWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\actions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\env.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tfm\input_dialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tfm\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\fsnode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\mainwnd.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\mainwnd_fwd.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\toolbar.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\treeview.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\content_view.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\statusbar.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\sizebar.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\stuff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\navbar.h">
+      <Filter>Header Files\MainWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\env.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tfm\input_dialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tfm\TFM.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="tfm\icons\toolbar.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="tfm\icons\btn_go.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="tfm\icons\btn_refresh.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="tfm\icons\btn_nav_special.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
