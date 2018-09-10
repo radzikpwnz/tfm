@@ -1,15 +1,27 @@
 ﻿#include "common.h"
 
+#include "core.h"
+#include "fsnode.h"
+
+#include "state.h"
+
+
+// Root FS nodes
 static thread_local std::vector<FSNode> gRootFSNodes;
 
+// FS nodes tree root
 static thread_local std::vector<FSNode> gFSNodesTreeRoot;
 
+// Current path
 static thread_local fs::path gCurPath;
+// Current path FS nodes
 static thread_local std::vector<FSNode> gCurPathFSNodes;
 
+// Current content FS nodes
 static thread_local std::vector<FSNode> gCurContentFSNodes;
 
 
+// Init root FS nodes
 bool
 InitRootFSNodes()
 {
@@ -22,6 +34,7 @@ InitRootFSNodes()
     return true;
 }
 
+// Init FS nodes tree
 bool
 InitFSNodesTree()
 {
@@ -39,37 +52,42 @@ InitFSNodesTree()
     return true;
 }
 
+// Get FS nodes tree
 std::vector<FSNode> const&
 GetFSNodesTree()
 {
     return gFSNodesTreeRoot;
 }
 
+// Get root FS nodes
 std::vector<FSNode> const&
 GetRootFSNodes()
 {
     return gRootFSNodes;
 }
 
+// Get current path FS nodes
 std::vector<FSNode> const&
 GetCurPathFSNodes()
 {
     return gCurPathFSNodes;
 }
 
+// Get current content FS nodes
 std::vector<FSNode> const&
 GetCurContentFSNodes()
 {
     return gCurContentFSNodes;
 }
 
-
+// Get current path
 fs::path const&
 GetCurPath()
 {
     return gCurPath;
 }
 
+// Set current path
 static void
 SetCurPath(fs::path path)
 {
@@ -80,6 +98,8 @@ SetCurPath(fs::path path)
     gCurPath = (path / L"1.txt").parent_path();
 }
 
+
+// On navigate handler (current path change)
 static void
 OnNavigate()
 {
@@ -88,6 +108,7 @@ OnNavigate()
     InstanceManager::getCurrent()->getMainWnd()->onContentUpdate();
 }
 
+// On navigate up handler
 void
 NavigateUp(FSNode const* node)
 {
@@ -105,6 +126,7 @@ NavigateUp(FSNode const* node)
     OnNavigate();
 }
 
+// On navigate down handler
 void
 NavigateDown(std::wstring dir)
 {
@@ -125,12 +147,14 @@ NavigateDown(std::wstring dir)
     OnNavigate();
 }
 
+// Refresh current path's content
 void NavigateRefresh()
 {
     gCurPathFSNodes.back().rebuildChildsList(gCurContentFSNodes);
     InstanceManager::getCurrent()->getMainWnd()->onContentUpdate();
 }
 
+// Navigate to special node
 void
 NavigateToSpecialNode(FSNode::SpecialType specialType)
 {
@@ -140,6 +164,7 @@ NavigateToSpecialNode(FSNode::SpecialType specialType)
     OnNavigate();
 }
 
+// Navigate to root node
 void
 NavigateToRootNode(FSNode* node)
 {
@@ -149,6 +174,7 @@ NavigateToRootNode(FSNode* node)
     OnNavigate();
 }
 
+// Navigate by selecting element from tree
 void
 NavigateFromTree(FSNode* node)
 {
@@ -170,6 +196,7 @@ NavigateFromTree(FSNode* node)
     OnNavigate();
 }
 
+// Navigate to path
 static void
 NavigateToPath(fs::path path)
 {
@@ -183,7 +210,7 @@ NavigateToPath(fs::path path)
     OnNavigate();
 }
 
-
+// Tree expanding handler
 void
 TreeExpanding(HTREEITEM treeItem, FSNode* node)
 {
@@ -192,6 +219,7 @@ TreeExpanding(HTREEITEM treeItem, FSNode* node)
     InstanceManager::getCurrent()->getMainWnd()->onTreeExpanding(treeItem, *node);
 }
 
+// Tree collapsed handler
 void
 TreeCollapsed(HTREEITEM treeItem, FSNode* node)
 {
@@ -200,6 +228,7 @@ TreeCollapsed(HTREEITEM treeItem, FSNode* node)
     node->clearChildsList();
 }
 
+// Tree full refresh
 void
 TreeFullRefresh()
 {
@@ -207,6 +236,7 @@ TreeFullRefresh()
     InstanceManager::getCurrent()->getMainWnd()->onTreeRefresh();
 }
 
+// Set current path from cmdline argument
 void
 SetCurPathFromCmdlineArg(std::wstring const& pathStr)
 {

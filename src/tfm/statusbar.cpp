@@ -1,11 +1,11 @@
-﻿#include <windows.h>
-
-#include "common.h"
+﻿#include "common.h"
 
 #include "mainwnd.h"
 
 #include "statusbar.h"
 
+
+// Create status bar instance
 StatusBar*
 StatusBar::create(HINSTANCE hInstance, MainWnd* parentWnd)
 {

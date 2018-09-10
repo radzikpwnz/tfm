@@ -1,5 +1,7 @@
 ﻿#include "common.h"
 
+
+// Get window rect in parent window
 void
 GetWindowRectInParent(HWND hwnd, RECT* rect)
 {

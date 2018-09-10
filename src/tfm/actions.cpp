@@ -1,63 +1,73 @@
 ﻿#include "common.h"
 
-#include <shlobj.h>
+#include "core.h"
+#include "resource.h"
+#include "state.h"
 
 #include "actions.h"
 
 
+// Clipboard (contains full paths to files/folders)
 static thread_local std::vector<fs::path> gClipboard;
+// Cut mode flag for current clipboard content
 static thread_local bool gClipboardIsCut;
 
 
+// Async file operation action
 class FileOpAsyncAction
 {
 public:
+    // Action type
     enum ActionType
     {
-        ACT_DELETE,
-        ACT_COPY,
-        ACT_MOVE
+        ACT_DELETE,  // delete
+        ACT_COPY,    // copy
+        ACT_MOVE     // move (rename)
     };
 
 private:
+    // Messages (from worker thread to dialog (in main thread))
     enum Msg
     {
-        MSG_CLOSE = WM_APP,
-        MSG_NAVIGATE_REFRESH,
-        MSG_ERROR
+        MSG_CLOSE = WM_APP,     // close dialog and finish action
+        MSG_NAVIGATE_REFRESH,   // refresh navigation content
+        MSG_ERROR               // error during operation
     };
+
+private:
+    static void workerEntryPoint(FileOpAsyncAction* act);
+    static INT_PTR CALLBACK dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 public:
     FileOpAsyncAction(ActionType type)
-        : mType(type), mMutex(), mSrcPaths(), mDstPath(), mRes(false), mCancel(false)
+        : mType(type), mSrcPaths(), mDstPath(), mRes(false), mCancel(false)
     {
     }
 
+    // Set source paths
     void setSrcPaths(std::vector<fs::path> const& srcPaths) { mSrcPaths = srcPaths; }
+    // Set destination path
     void setDstPath(fs::path const& dstPaths) { mDstPath = dstPaths; }
 
     void run();
 
 private:
     void workerEntryPointInternal();
-    static void workerEntryPoint(FileOpAsyncAction* act);
-
     INT_PTR CALLBACK dlgProcInternal(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-    static INT_PTR CALLBACK dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
-    ActionType mType;
-    HWND mHDlg;
-    HWND mCurPbHwnd;
-    HWND mTotalPbHWnd;
-    std::vector<fs::path> mSrcPaths;
-    fs::path mDstPath;
+    ActionType mType;                  // action type
+    HWND mHDlg;                        // dialog hwnd
+    HWND mCurPbHwnd;                   // current progress bar hwnd
+    HWND mTotalPbHWnd;                 // total progress bar hwnd
+    std::vector<fs::path> mSrcPaths;   // source paths
+    fs::path mDstPath;                 // destination path
 
-    std::mutex mMutex;
-    std::atomic<bool> mRes;
-    std::atomic<bool> mCancel;
+    std::atomic<bool> mRes;            // [out] operation result
+    std::atomic<bool> mCancel;         // cancel flag (signal from worker thread to dialog)
 };
 
+// Dialog procedure (internal function)
 INT_PTR CALLBACK
 FileOpAsyncAction::dlgProcInternal(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -123,6 +133,7 @@ FileOpAsyncAction::dlgProcInternal(HWND hDlg, UINT message, WPARAM wParam, LPARA
     return FALSE;
 }
 
+// Dialog procedure
 INT_PTR CALLBACK
 FileOpAsyncAction::dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -135,6 +146,7 @@ FileOpAsyncAction::dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
     return act->dlgProcInternal(hDlg, message, wParam, lParam);
 }
 
+// Worker thread entry point (internal function)
 void
 FileOpAsyncAction::workerEntryPointInternal()
 {
@@ -146,6 +158,7 @@ FileOpAsyncAction::workerEntryPointInternal()
         {
             SetWindowText(GetDlgItem(mHDlg, IDC_CURFILE), mSrcPaths[i].c_str());
 
+            // FIXME: std::filesystem realization doesn't work under Wine
             /*std::error_code err;
             if ( !fs::remove_all(mSrcPaths[i], err) || err )
             {
@@ -154,6 +167,7 @@ FileOpAsyncAction::workerEntryPointInternal()
                 break;
             }*/
 
+            // Prepare path for SHFILEOPSTRUCT format (double null-terminate)
             std::wstring curSrcFixed = mSrcPaths[i].wstring();
             curSrcFixed.resize(curSrcFixed.length() + 2);
 
@@ -192,6 +206,7 @@ FileOpAsyncAction::workerEntryPointInternal()
 
             if ( mType == ACT_COPY )
             {
+                // FIXME: std::filesystem realization doesn't work under Wine
                 /*std::error_code err;
                 fs::copy(curSrc, curDst, err);
                 if ( err )
@@ -201,11 +216,11 @@ FileOpAsyncAction::workerEntryPointInternal()
                     break;
                 }*/
 
+                // Prepare paths for SHFILEOPSTRUCT format (double null-terminate)
                 std::wstring curSrcFixed = curSrc.wstring();
                 curSrcFixed.resize(curSrcFixed.length() + 2);
                 std::wstring dstFixed = mDstPath.wstring();
                 dstFixed.resize(dstFixed.length() + 2);
-
 
                 SHFILEOPSTRUCT s = { 0 };
                 s.hwnd = mHDlg;
@@ -240,21 +255,18 @@ FileOpAsyncAction::workerEntryPointInternal()
             }
         }
     }
-
-    /*while ( !mCancel )
-    {
-        std::this_thread::yield();
-    }*/
     
     SendMessage(mHDlg, MSG_CLOSE, 0, 0);
 }
 
+// Worker thread entry point
 void
 FileOpAsyncAction::workerEntryPoint(FileOpAsyncAction* act)
 {
     act->workerEntryPointInternal();
 }
 
+// Run action
 void
 FileOpAsyncAction::run()
 {
@@ -266,24 +278,28 @@ FileOpAsyncAction::run()
 }
 
 
+// Get clipboard contents
 std::vector<fs::path>&
 GetClipboard()
 {
     return gClipboard;
 }
 
+// Clear clipboard
 void
 ClearClipboard()
 {
     gClipboard.clear();
 }
 
+// Is current clipboard in cut mode
 bool
 GetClipboardIsCut()
 {
     return gClipboardIsCut;
 }
 
+// Set current clipboard in cut mode
 void
 SetClipboardIsCut(bool val)
 {
@@ -291,6 +307,7 @@ SetClipboardIsCut(bool val)
 }
 
 
+// Paste file(s)
 bool
 PasteFiles(fs::path dstPath)
 {
@@ -309,6 +326,7 @@ PasteFiles(fs::path dstPath)
     return true;
 }
 
+// Delete file(s)
 bool
 DeleteFiles(std::vector<fs::path> const& srcPaths)
 {
@@ -321,6 +339,7 @@ DeleteFiles(std::vector<fs::path> const& srcPaths)
     return true;
 }
 
+// Create one shortcut
 static bool
 CreateShortcut(std::wstring const& src, std::wstring const& dst)
 {
@@ -347,6 +366,7 @@ CreateShortcut(std::wstring const& src, std::wstring const& dst)
     return SUCCEEDED(hres);
 }
 
+// Create shortcut(s)
 bool
 CreateShortcuts(std::vector<fs::path> const& srcPaths, fs::path dstPath)
 {

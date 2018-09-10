@@ -1,8 +1,8 @@
-﻿#include <windows.h>
-#include <shlobj.h>
+﻿#include "common.h"
 
-#include "common.h"
-
+#include "fsnode.h"
+#include "state.h"
+#include "env.h"
 #include "mainwnd.h"
 #include "actions.h"
 #include "input_dialog.h"
@@ -10,15 +10,7 @@
 #include "content_view.h"
 
 
-/*ContentView::CtxMenuElem ContentView::ctxMenuElems[] = {
-    { L"Open",            &ContentView::actDummy  },
-    { L"Cut",          &ContentView::actDummy  },
-    { L"Copy",           &ContentView::actDummy  },
-    { L"Paste",         &ContentView::actDummy  },
-    { L"Delete",        &ContentView::actDummy  },
-    { L"New Folder",    &ContentView::actDummy  }
-};*/
-
+// Context menu elements
 ContentView::CtxMenuElem ContentView::ctxOpen =         { L"Open",             &ContentView::actOpen };
 ContentView::CtxMenuElem ContentView::ctxCut =          { L"Cut",              &ContentView::actCut };
 ContentView::CtxMenuElem ContentView::ctxCopy =         { L"Copy",             &ContentView::actCopy };
@@ -32,6 +24,7 @@ ContentView::CtxMenuElem ContentView::ctxNewFolder =    { L"New folder",       &
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// Window procedure (internal function)
 LRESULT CALLBACK
 ContentView::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -42,6 +35,7 @@ ContentView::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             HWND hwnd = (HWND)lParam;
             if ( hwnd == 0 )
             {
+                // Context menu element click
                 MENUITEMINFO item;
                 item.cbSize = sizeof(MENUITEMINFO);
                 item.fMask = MIIM_DATA;
@@ -57,6 +51,7 @@ ContentView::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     return mOrigWndProc(hWnd, message, wParam, lParam);
 }
 
+// Window procedure
 LRESULT CALLBACK
 ContentView::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -64,14 +59,7 @@ ContentView::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return contentView->wndProcInternal(hWnd, message, wParam, lParam);
 }
 
-/*static int CALLBACK
-NodesCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-    FSNode* node1 = (FSNode*)lParam1;
-    FSNode* node2 = (FSNode*)lParam2;
-    if (  )
-}*/
-
+// Set content view style
 void
 ContentView::setViewStyle(ViewStyle style)
 {
@@ -100,8 +88,9 @@ ContentView::setViewStyle(ViewStyle style)
     refreshContent();
 }
 
+// Get selected items
 uint32_t
-ContentView::getSelectedItems(std::vector<SelItem>& resList)
+ContentView::getSelectedItems(std::vector<SelItem>& resList) // destination list
 {
     uint32_t typeMask = 0;
     resList.clear();
@@ -124,6 +113,15 @@ ContentView::getSelectedItems(std::vector<SelItem>& resList)
     return typeMask;
 }
 
+/*static int CALLBACK
+NodesCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    FSNode* node1 = (FSNode*)lParam1;
+    FSNode* node2 = (FSNode*)lParam2;
+    if (  )
+}*/
+
+// Clean and rebuild all content
 void
 ContentView::refreshContent()
 {
@@ -153,12 +151,6 @@ ContentView::refreshContent()
         {
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
             ListView_SetImageList(mHWnd, himl, LVSIL_SMALL);
-
-            /*ITEMIDLIST* pidl;
-            SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl);
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo((LPCWSTR)pidl, FILE_ATTRIBUTE_NORMAL, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_PIDL);
-            CoTaskMemFree(pidl);
-            ListView_SetImageList(mHWnd, himl, LVSIL_SMALL);*/
         }
 
         item.iItem = i;
@@ -170,8 +162,11 @@ ContentView::refreshContent()
     //ListView_SortItems(mHWnd, NodesCompareFunc, 0);
 }
 
+// Insert element in current context menu
 void
-ContentView::insertCtxMenuElem(unsigned id, CtxMenuElem* elem, bool insertSep)
+ContentView::insertCtxMenuElem(unsigned id,       // element id
+                               CtxMenuElem* elem, // element descr
+                               bool insertSep)    // insert separator after element
 {
     MENUITEMINFO item = {};
     item.cbSize = sizeof(MENUITEMINFO);
@@ -192,6 +187,7 @@ ContentView::insertCtxMenuElem(unsigned id, CtxMenuElem* elem, bool insertSep)
     }
 }
 
+// Create context menu
 void
 ContentView::createContextMenu(ContextMenuType type)
 {
@@ -226,6 +222,7 @@ ContentView::createContextMenu(ContextMenuType type)
     TrackPopupMenu(hMenu, 0, cursor.x, cursor.y, 0, mHWnd, nullptr);
 }
 
+// WM_NOTIFY message handler
 LRESULT
 ContentView::notify(NMHDR* nmhdr)
 {
@@ -257,6 +254,7 @@ ContentView::notify(NMHDR* nmhdr)
         }
         case NM_DBLCLK:
         {
+            // Double click
             NMITEMACTIVATE* ia = (NMITEMACTIVATE*)nmhdr;
 
             if ( ia->iItem == -1 || ia->iSubItem != 0)
@@ -282,11 +280,12 @@ ContentView::notify(NMHDR* nmhdr)
         }
         case NM_RCLICK:
         {
+            // Right click
             NMITEMACTIVATE* ia = (NMITEMACTIVATE*)nmhdr;
 
             if ( ia->iItem != -1 && ia->iSubItem == 0 )
             {
-                // Item(s)
+                // Item(s) right click
                 uint32_t typeMask = getSelectedItems(mSelItems);
 
                 if ( (typeMask & ~(1 << FSNode::DIR) & ~(1 << FSNode::FILE)) != 0 )
@@ -297,7 +296,7 @@ ContentView::notify(NMHDR* nmhdr)
                 createContextMenu(mSelItems.size() == 1 ? MENU_SINGLE : MENU_MULTIPLE);
             } else
             {
-                // Space
+                // Empty space right click
                 createContextMenu(MENU_EMPTY);
             }
     
@@ -308,12 +307,7 @@ ContentView::notify(NMHDR* nmhdr)
     return 0;
 }
 
-void
-ContentView::actDummy()
-{
-    MessageBox(mHWnd, L"DUMMY", L"DUMMY", MB_OK);
-}
-
+// "Open" action
 void
 ContentView::actOpen()
 {
@@ -333,6 +327,7 @@ ContentView::actOpen()
     ShellExecute(mParentWnd->hwnd(), L"open", &GetFSNodeFullPath(*fsnode).wstring()[0], nullptr, &GetCurPath().wstring()[0], SW_SHOW);
 }
 
+// "Cut" action
 void
 ContentView::actCut()
 {
@@ -347,6 +342,7 @@ ContentView::actCut()
     SetClipboardIsCut(true);
 }
 
+// "Copy" action
 void
 ContentView::actCopy()
 {
@@ -361,6 +357,7 @@ ContentView::actCopy()
     SetClipboardIsCut(false);
 }
 
+// "Create link" action
 void
 ContentView::actCreateLink()
 {
@@ -375,6 +372,7 @@ ContentView::actCreateLink()
     CreateShortcuts(srcPaths, dstPath);
 }
 
+// "Delete" action
 void
 ContentView::actDelete()
 {
@@ -390,6 +388,7 @@ ContentView::actDelete()
     //TreeFullRefresh();
 }
 
+// "Rename" action
 void
 ContentView::actRename()
 {
@@ -420,10 +419,9 @@ ContentView::actRename()
     fs::rename(oldPath, newPath);
 
     NavigateRefresh();
-
-    //ListView_EditLabel(mHWnd, mSelItems[0].id);
 }
 
+// "Paste" action
 void
 ContentView::actPaste()
 {
@@ -431,6 +429,7 @@ ContentView::actPaste()
     NavigateRefresh();
 }
 
+// "Paste as link" action
 void
 ContentView::actPasteAsLink()
 {
@@ -438,6 +437,7 @@ ContentView::actPasteAsLink()
     NavigateRefresh();
 }
 
+// "New folder" action
 void
 ContentView::actNewFolder()
 {
@@ -469,7 +469,7 @@ ContentView::actNewFolder()
 }
 
 
-
+// Insert columns for DETAILS view style
 void
 ContentView::insertColumns()
 {
@@ -489,15 +489,16 @@ ContentView::insertColumns()
     ListView_InsertColumn(mHWnd, 3, &column);
 }
 
+// Create content view instance
 ContentView*
 ContentView::create(HINSTANCE hInstance, MainWnd* parentWnd)
 {
     ContentView* contentView = new ContentView();
 
     contentView->mHWnd = CreateWindowEx(0, WC_LISTVIEW, NULL,
-        WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER | LVS_REPORT | LVS_SHAREIMAGELISTS,
-        0, 0, 0, 0,
-        parentWnd->hwnd(), (HMENU)NULL, hInstance, NULL);
+                                        WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER | LVS_REPORT | LVS_SHAREIMAGELISTS,
+                                        0, 0, 0, 0,
+                                        parentWnd->hwnd(), (HMENU)NULL, hInstance, NULL);
 
     if ( contentView->mHWnd == NULL )
     {
@@ -506,8 +507,8 @@ ContentView::create(HINSTANCE hInstance, MainWnd* parentWnd)
 
     contentView->insertColumns();
 
-    DWORD exStyle = ListView_GetExtendedListViewStyle(contentView->mHWnd);
-    exStyle |= LVS_EX_FULLROWSELECT/*LVS_EX_DOUBLEBUFFER | LVS_EX_BORDERSELECT*/;
+    //DWORD exStyle = ListView_GetExtendedListViewStyle(contentView->mHWnd);
+    //exStyle |= LVS_EX_FULLROWSELECT/*LVS_EX_DOUBLEBUFFER | LVS_EX_BORDERSELECT*/;
     //ListView_SetExtendedListViewStyle(contentView->mHWnd, exStyle);
 
     contentView->mOrigWndProc = (WNDPROC)SetWindowLongPtr(contentView->mHWnd, GWLP_WNDPROC, (LONG_PTR)wndProc);

@@ -1,5 +1,5 @@
 ﻿#pragma once
 
-#include <windows.h>
+#include "common.h"
 
 void GetWindowRectInParent(HWND hwnd, RECT* rect);

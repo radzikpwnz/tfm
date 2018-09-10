@@ -1,16 +1,16 @@
-﻿#include <windows.h>
+﻿#include "common.h"
 
-#include "common.h"
-
+#include "resource.h"
+#include "state.h"
 #include "mainwnd.h"
 
 #include "toolbar.h"
 
-static constexpr unsigned TOOLBAR_ICONS_COUNT = 16;
 
+// Message code base for toolbar buttons
 #define MAINTLB_FIRST_MESSAGE_CODE (WM_APP + 100)
 
-
+// Toolbar buttons
 Toolbar::ToolbarBtn Toolbar::buttons[] = {
     //{ L"Back",          0,  &Toolbar::dummyProc   },
     //{ L"Forward",       1,  &Toolbar::dummyProc   },
@@ -22,25 +22,17 @@ Toolbar::ToolbarBtn Toolbar::buttons[] = {
     { L"New Folder",    7,  &Toolbar::actNewFolder  }
 };
 
-
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// Window procedure (internal function)
 LRESULT CALLBACK
 Toolbar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    /*switch ( message )
-    {
-        case WM_SETFOCUS:
-        {
-            SetFocus((HWND)wParam); 
-            return 0;
-        }
-    }*/
-
     return mOrigWndProc(hWnd, message, wParam, lParam);
 }
 
+// Window procedure
 LRESULT CALLBACK
 Toolbar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -48,58 +40,60 @@ Toolbar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return toolbar->wndProcInternal(hWnd, message, wParam, lParam);
 }
 
-bool
-Toolbar::addButtons()
-{
-    const unsigned buttonsCount = sizeof(buttons) / sizeof(buttons[0]);
-    const int bitmapSize = 16;
-
-	SendMessage(mHWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-
-    COLORMAP colorMap;
-    colorMap.from = RGB(255, 0, 255);
-    colorMap.to = GetSysColor(COLOR_BTNFACE);
-    HBITMAP hBmp = CreateMappedBitmap(GetModuleHandle(NULL), IDB_TOOLBAR, 0, &colorMap, 1);
-
-	SendMessage(mHWnd, TB_SETINDENT, 2, 0);
-	//SendMessage(mHWnd, TB_SETMAXTEXTROWS, 0, 0);
-
-    TBADDBITMAP tb_ab;
-	tb_ab.hInst = NULL;
-	tb_ab.nID = (UINT_PTR)hBmp;
-	SendMessage(mHWnd, TB_ADDBITMAP, buttonsCount, (LPARAM)&tb_ab);
-
-    TBBUTTON tbb_sep = {};
-	tbb_sep.fsStyle = BTNS_SEP;
-
-    TBBUTTON tbb;
-	tbb.fsState = TBSTATE_ENABLED;
-	tbb.fsStyle = BTNS_BUTTON/* | BTNS_AUTOSIZE*/;
-
-    int i, pos;
-	for ( i = 0, pos = 0; i < buttonsCount; i++, pos++ )
-    {
-		tbb.iBitmap = buttons[i].img_id;
-		tbb.idCommand = MAINTLB_FIRST_MESSAGE_CODE + i;
-		tbb.iString = (INT_PTR)buttons[i].text;
-
-		SendMessage(mHWnd, TB_INSERTBUTTON, pos, (LPARAM)&tbb);
-
-        if ( buttons[i].insert_sep )
-        {
-            SendMessage(mHWnd, TB_INSERTBUTTON, ++pos, (LPARAM)&tbb_sep);
-        }
-	}
-
-	return true;
-}
-
+// WM_COMMAND message handler (on button click)
 void
 Toolbar::command(unsigned command)
 {
     (this->*buttons[command - MAINTLB_FIRST_MESSAGE_CODE].proc)();
 }
 
+// Add buttons
+bool
+Toolbar::addButtons()
+{
+    const unsigned buttonsCount = sizeof(buttons) / sizeof(buttons[0]);
+    const int bitmapSize = 16;
+
+    SendMessage(mHWnd, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+
+    COLORMAP colorMap;
+    colorMap.from = RGB(255, 0, 255);
+    colorMap.to = GetSysColor(COLOR_BTNFACE);
+    HBITMAP hBmp = CreateMappedBitmap(GetModuleHandle(NULL), IDB_TOOLBAR, 0, &colorMap, 1);
+
+    SendMessage(mHWnd, TB_SETINDENT, 2, 0);
+
+    TBADDBITMAP tb_ab;
+    tb_ab.hInst = NULL;
+    tb_ab.nID = (UINT_PTR)hBmp;
+    SendMessage(mHWnd, TB_ADDBITMAP, buttonsCount, (LPARAM)&tb_ab);
+
+    TBBUTTON tbb_sep = {};
+    tbb_sep.fsStyle = BTNS_SEP;
+
+    TBBUTTON tbb;
+    tbb.fsState = TBSTATE_ENABLED;
+    tbb.fsStyle = BTNS_BUTTON/* | BTNS_AUTOSIZE*/;
+
+    int i, pos;
+    for ( i = 0, pos = 0; i < buttonsCount; i++, pos++ )
+    {
+        tbb.iBitmap = buttons[i].img_id;
+        tbb.idCommand = MAINTLB_FIRST_MESSAGE_CODE + i;
+        tbb.iString = (INT_PTR)buttons[i].text;
+
+        SendMessage(mHWnd, TB_INSERTBUTTON, pos, (LPARAM)&tbb);
+
+        if ( buttons[i].insert_sep )
+        {
+            SendMessage(mHWnd, TB_INSERTBUTTON, ++pos, (LPARAM)&tbb_sep);
+        }
+    }
+
+    return true;
+}
+
+// Create toolbar instance
 Toolbar*
 Toolbar::create(HINSTANCE hInstance, MainWnd* parentWnd)
 {
@@ -107,7 +101,7 @@ Toolbar::create(HINSTANCE hInstance, MainWnd* parentWnd)
 
     toolbar->mHWnd = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
                                     WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE |
-                                    /*TBSTYLE_WRAPABLE | *//*TBSTYLE_LIST | */TBSTYLE_FLAT /*| CCS_NODIVIDER*/ | CCS_NORESIZE /*| WS_BORDER*//* | TBSTYLE_TOOLTIPS*/,
+                                    TBSTYLE_FLAT /*| CCS_NODIVIDER*/ | CCS_NORESIZE,
                                     0, 0, 0, 0,
                                     parentWnd->hwnd(), NULL, hInstance, NULL);
 
@@ -130,18 +124,14 @@ Toolbar::create(HINSTANCE hInstance, MainWnd* parentWnd)
     return toolbar;
 }
 
-void
-Toolbar::actDummy()
-{
-
-}
-
+// "Up" action
 void
 Toolbar::actUp()
 {
     NavigateUp();
 }
 
+// "Copy" action
 void
 Toolbar::actCopy()
 {
@@ -149,6 +139,7 @@ Toolbar::actCopy()
     mParentWnd->getContentView()->actCopy();
 }
 
+// "Cut" action
 void
 Toolbar::actCut()
 {
@@ -156,12 +147,14 @@ Toolbar::actCut()
     mParentWnd->getContentView()->actCut();
 }
 
+// "Paste" action
 void
 Toolbar::actPaste()
 {
     mParentWnd->getContentView()->actPaste();
 }
 
+// "Delete" action
 void
 Toolbar::actDelete()
 {
@@ -169,6 +162,7 @@ Toolbar::actDelete()
     mParentWnd->getContentView()->actDelete();
 }
 
+// "New folder" action
 void
 Toolbar::actNewFolder()
 {

@@ -1,7 +1,9 @@
-﻿#include <windows.h>
+﻿#include "common.h"
 
-#include "common.h"
-
+#include "resource.h"
+#include "stuff.h"
+#include "core.h"
+#include "state.h"
 #include "mainwnd.h"
 
 #include "navbar.h"
@@ -10,6 +12,7 @@
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// Window procedure (internal function)
 LRESULT CALLBACK
 NavBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -52,7 +55,7 @@ NavBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 MENUITEMINFO item;
                 item.cbSize = sizeof(MENUITEMINFO);
                 item.fMask =  MIIM_DATA;
-                GetMenuItemInfo(mSpecialPopupMenuHandle, LOWORD(wParam), FALSE, &item);
+                GetMenuItemInfo(mMorePopupMenuHandle, LOWORD(wParam), FALSE, &item);
                 FSNode* node = (FSNode*)item.dwItemData;
                 if ( LOWORD(wParam) < NON_SPECIAL_MENU_ID_START )
                 {
@@ -70,6 +73,7 @@ NavBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return mOrigWndProc(hWnd, message, wParam, lParam);
 }
 
+// Window procedure
 LRESULT CALLBACK
 NavBar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -77,6 +81,7 @@ NavBar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return navBar->wndProcInternal(hWnd, message, wParam, lParam);
 }
 
+// Address window procedure (internal function)
 LRESULT CALLBACK
 NavBar::addrWndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -95,7 +100,7 @@ NavBar::addrWndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             AddrButton& button = mAddrButtons[LOWORD(wParam)];
             if ( button.isSpecial )
             {
-                createSpecialPopupMenu();
+                createMorePopupMenu();
             } else
             {
                 NavigateUp(button.fsnode);
@@ -120,6 +125,7 @@ NavBar::addrWndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return mAddrOrigWndProc(hWnd, message, wParam, lParam);
 }
 
+// Address window procedure
 LRESULT CALLBACK
 NavBar::addrWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -127,6 +133,7 @@ NavBar::addrWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return navBar->addrWndProcInternal(hWnd, message, wParam, lParam);
 }
 
+// Get preferres navigation bar height
 int
 NavBar::getPreferredHeight()
 {
@@ -135,6 +142,7 @@ NavBar::getPreferredHeight()
     return refresh_rect.bottom - refresh_rect.top + 6;
 }
 
+// Create new address fragment button
 NavBar::AddrButton&
 NavBar::addAddrButton()
 {
@@ -146,18 +154,13 @@ NavBar::addAddrButton()
                                  0, 0, 0, 0,
                                  mAddrHWnd, (HMENU)index, Globals.getHInstance(), NULL);
 
-    /*NONCLIENTMETRICS metrics = {};
-    metrics.cbSize = sizeof(metrics);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize, &metrics, 0);
-    HFONT guiFont = CreateFontIndirect(&metrics.lfCaptionFont);*/
-
-    SendMessage(button.hwnd, WM_SETFONT, (WPARAM)/*guiFont*/GetStockObject(DEFAULT_GUI_FONT), 0);
-    //DeleteObject(guiFont);
+    SendMessage(button.hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
 
     mAddrButtons.push_back(button);
     return mAddrButtons[mAddrButtons.size() - 1];
 }
 
+// Calculate address fragment button width by it's text
 void
 NavBar::calcAddrButtonWidth(AddrButton& button, std::wstring const& text)
 {
@@ -170,6 +173,7 @@ NavBar::calcAddrButtonWidth(AddrButton& button, std::wstring const& text)
     ReleaseDC(button.hwnd, hDC);
 }
 
+// Init address fragment buttons
 void
 NavBar::initAddrButtons()
 {
@@ -194,6 +198,7 @@ NavBar::initAddrButtons()
     resizeAddrButtons();
 }
 
+// Recreate address fragment buttons (on address change)
 void
 NavBar::recreateAddrButtons()
 {
@@ -231,6 +236,7 @@ NavBar::recreateAddrButtons()
     }
 }
 
+// Resize address fragment buttons (on navigation bar resize)
 void
 NavBar::resizeAddrButtons()
 {
@@ -278,6 +284,7 @@ NavBar::resizeAddrButtons()
     }
 }
 
+// Enter/exit address edit mode
 void
 NavBar::setAddrEditMode(bool val)
 {
@@ -309,8 +316,9 @@ NavBar::setAddrEditMode(bool val)
     }
 }
 
+// Create "More" popup menu
 void
-NavBar::createSpecialPopupMenu()
+NavBar::createMorePopupMenu()
 {
     HMENU menu = CreatePopupMenu();
 
@@ -358,12 +366,13 @@ NavBar::createSpecialPopupMenu()
         InsertMenuItem(menu, (unsigned)-1, TRUE, &item);
     }
 
-    mSpecialPopupMenuHandle = menu;
+    mMorePopupMenuHandle = menu;
     POINT cursor;
     GetCursorPos(&cursor);
     TrackPopupMenu(menu, 0, cursor.x, cursor.y, 0, mHWnd, nullptr);
 }
 
+// Init "Go" and "Refresh" buttons
 void
 NavBar::initButtons()
 {
@@ -380,6 +389,7 @@ NavBar::initButtons()
     SetWindowPos(mRefreshHWnd, NULL, 0, 0, 30, 30, SWP_NOZORDER | SWP_NOMOVE);
 }
 
+// Create navigation bar instance
 NavBar*
 NavBar::create(HINSTANCE hInstance, MainWnd* parentWnd)
 {

@@ -2,30 +2,34 @@
 
 #include "common.h"
 
+// Filesystem node (FSNode)
 class FSNode
 {
 public:
+    // Node type
     enum Type
     {
-        FILE,
-        DIR,
-        LOGICAL_DRIVE,
-        SPECIAL,
+        FILE,           // regular file
+        DIR,            // directory
+        LOGICAL_DRIVE,  // logical drive
+        SPECIAL,        // special
         TYPE_LAST
     };
 
+    // Special node types (for SPECIAL type)
     enum SpecialType
     {
-        NONE,
-        DESKTOP,
-        MY_DOCUMENTS,
-        MY_COMPUTER,
+        NONE,              // none (non-special)
+        DESKTOP,           // Desktop
+        MY_DOCUMENTS,      // My Documents
+        MY_COMPUTER,       // My Computer
         SPECIAL_TYPE_LAST
     };
 
 public:
     FSNode() {}
 
+    // Non-special node constructor
     FSNode(Type type, std::wstring path)
     {
         mType = type;
@@ -35,6 +39,7 @@ public:
         mHasChildFolders = false;
     }
 
+    // Special node constructor
     FSNode(SpecialType specialType)
     {
         mType = SPECIAL;
@@ -44,27 +49,33 @@ public:
         mHasChildFolders = false;
     }
 
-    //~FSNode() {}
-
 public:
     static void initCommon();
 
+public:
+    // Get type
     Type getType() const  { return mType; }
 
+    // Get special type
     SpecialType getSpecialType() const { return mSpecialType; }
 
+    // Get parent node
     FSNode* getParent() const { return mParent; }
+    // Set parent node
     void setParent(FSNode* parent) { mParent = parent; }
 
-    std::wstring const& getDisplayName() const;
-
+    // Get relative (from parent node) path
     std::wstring const& getRelPath() const { return mPath; }
 
+    // Get childs list
     std::vector<FSNode> const& getChildsList() const { return mChilds; }
-
     std::vector<FSNode>& getChildsList() { return mChilds; }
 
+    // Is node has child folders
     bool hasChildFolders() const { return mHasChildFolders; }
+
+
+    std::wstring const& getDisplayName() const;
 
     void rebuildChildsListMyComputer(std::vector<FSNode>& resList);
     void rebuildChildsListDir(std::vector<FSNode>& resList, bool dirsOnly = false);
@@ -75,12 +86,12 @@ public:
     void checkIfHasChilds(bool rec);
 
 private:
-    Type mType:3;
-    SpecialType mSpecialType:3;
-    bool mHasChildFolders:1;
-    std::wstring mPath;
-    FSNode* mParent;
-    std::vector<FSNode> mChilds;
+    Type mType:3;                  // type
+    SpecialType mSpecialType:3;    // special type
+    bool mHasChildFolders:1;       // is node has child folders
+    std::wstring mPath;            // relative path
+    FSNode* mParent;               // parent node
+    std::vector<FSNode> mChilds;   // child nodes
 
     static std::wstring SpecialDisplayNames[];
     static std::wstring SpecialPaths[];

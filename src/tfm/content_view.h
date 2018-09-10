@@ -2,11 +2,14 @@
 
 #include "common.h"
 
+#include "fsnode.h"
 #include "mainwnd_fwd.h"
 
+// Content window (List-View Control)
 class ContentView
 {
 public:
+    // View style
     enum ViewStyle
     {
         LARGE_ICON,
@@ -15,24 +18,27 @@ public:
         DETAILS
     };
 
+    // Context menu type
     enum ContextMenuType
     {
-        MENU_SINGLE,
-        MENU_MULTIPLE,
-        MENU_EMPTY
+        MENU_SINGLE,   // when single element selected
+        MENU_MULTIPLE, // when multiple elements selected
+        MENU_EMPTY     // when no elements selected (click on empty space)
     };
 
 private:
+    // Context menu element
     struct CtxMenuElem
     {
-        std::wstring text;
-        void(ContentView::* proc)();
+        std::wstring text;           // text
+        void(ContentView::* proc)(); // handler
     };
 
+    // Selected item
     struct SelItem
     {
-        int id;
-        FSNode* fsnode;
+        int id;         // id (in list-view context)
+        FSNode* fsnode; // FSNode
     };
 
 private:
@@ -47,27 +53,27 @@ private:
     static CtxMenuElem ctxNewFolder;
 
 public:
-    HWND hwnd() { return mHWnd; }
-
-public:
     static ContentView* create(HINSTANCE hInstance, MainWnd* parentWnd);
 
-    void setViewStyle(ViewStyle style);
+private:
+    static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-    uint32_t getSelectedItems(std::vector<SelItem>& resList);
+public:
+    // Get hwnd
+    HWND hwnd() { return mHWnd; }
 
+    // Update selected items list
     void updateSelectedItems()
     {
         getSelectedItems(mSelItems);
     }
 
+    void setViewStyle(ViewStyle style);
+
     void refreshContent();
 
-    void insertCtxMenuElem(unsigned id, CtxMenuElem* elem, bool insertSep = false);
-    void createContextMenu(ContextMenuType type);
     LRESULT notify(NMHDR* nmhdr);
 
-    void actDummy();
     void actOpen();
     void actCut();
     void actCopy();
@@ -79,16 +85,20 @@ public:
     void actNewFolder();
 
 private:
+    uint32_t getSelectedItems(std::vector<SelItem>& resList);
+
+    void insertCtxMenuElem(unsigned id, CtxMenuElem* elem, bool insertSep = false);
+    void createContextMenu(ContextMenuType type);
+
     LRESULT CALLBACK wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     void insertColumns();
 
 private:
-    HWND mHWnd;
-    WNDPROC mOrigWndProc;
-    MainWnd* mParentWnd;
-    ViewStyle mViewStyle;
-    std::vector<SelItem> mSelItems;
-    HMENU mCtxMenuHandle;
+    HWND mHWnd;                     // hwnd
+    MainWnd* mParentWnd;            // parent window
+    WNDPROC mOrigWndProc;           // orig window procedure
+    ViewStyle mViewStyle;           // view style
+    std::vector<SelItem> mSelItems; // selected items list
+    HMENU mCtxMenuHandle;           // context menu handle
 };

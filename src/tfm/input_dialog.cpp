@@ -1,11 +1,15 @@
 ﻿#include "common.h"
 
+#include "core.h"
+#include "resource.h"
+
 #include "input_dialog.h"
 
 
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// Dialog procedure (internal function)
 INT_PTR CALLBACK
 InputDialog::dlgProcInternal(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -58,6 +62,7 @@ InputDialog::dlgProcInternal(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
+// Dialog procedure
 INT_PTR CALLBACK
 InputDialog::dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -70,7 +75,7 @@ InputDialog::dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return dlg->dlgProcInternal(hDlg, message, wParam, lParam);
 }
 
-
+// Show input dialog
 void
 InputDialog::show()
 {

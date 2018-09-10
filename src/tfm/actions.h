@@ -2,7 +2,6 @@
 
 #include "common.h"
 
-
 std::vector<fs::path>& GetClipboard();
 void ClearClipboard();
 bool GetClipboardIsCut();

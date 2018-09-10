@@ -1,7 +1,12 @@
 ﻿#include "common.h"
 
 #include "actions.h"
+#include "env.h"
 
+#include "fsnode.h"
+
+
+// Special nodes display names
 std::wstring FSNode::SpecialDisplayNames[SPECIAL_TYPE_LAST] = {
     L"",
     L"Desktop",
@@ -9,8 +14,11 @@ std::wstring FSNode::SpecialDisplayNames[SPECIAL_TYPE_LAST] = {
     L"Computer"
 };
 
+// Special nodes paths
 std::wstring FSNode::SpecialPaths[SPECIAL_TYPE_LAST];
 
+
+// Common initialization
 void
 FSNode::initCommon()
 {
@@ -20,27 +28,7 @@ FSNode::initCommon()
     SpecialPaths[MY_COMPUTER] = std::wstring();
 }
 
-bool
-IsPathExists(fs::path path)
-{
-    std::error_code err;
-    bool res = fs::exists(path, err);
-    return !err && res;
-}
-
-bool
-IsPathReadable(fs::path path)
-{
-    std::error_code err;
-    fs::file_status status = fs::status(path, err);
-    if ( err )
-    {
-        return false;
-    }
-    fs::perms perms = status.permissions();
-    return (perms & fs::perms::owner_read) != fs::perms::none;
-}
-
+// Get node display name
 std::wstring const&
 FSNode::getDisplayName() const
 {
@@ -58,6 +46,7 @@ FSNode::getDisplayName() const
     }
 }
 
+// Rebuild childs list for "My Computer" node
 void
 FSNode::rebuildChildsListMyComputer(std::vector<FSNode>& resList)
 {
@@ -82,6 +71,7 @@ FSNode::rebuildChildsListMyComputer(std::vector<FSNode>& resList)
     }
 }
 
+// Rebuild childs list for directory node
 void
 FSNode::rebuildChildsListDir(std::vector<FSNode>& resList, bool dirsOnly)
 {
@@ -132,6 +122,7 @@ FSNode::rebuildChildsListDir(std::vector<FSNode>& resList, bool dirsOnly)
     }
 }
 
+// Rebuild node childs list
 void
 FSNode::rebuildChildsList(std::vector<FSNode>& resList, bool dirsOnly)
 {
@@ -163,18 +154,21 @@ FSNode::rebuildChildsList(std::vector<FSNode>& resList, bool dirsOnly)
     }
 }
 
+// Rebuild node childs list in internal list
 void
 FSNode::rebuildChildsList(bool dirsOnly)
 {
     rebuildChildsList(mChilds, dirsOnly);
 }
 
+// Clear node internal childs list
 void
 FSNode::clearChildsList()
 {
     mChilds.clear();
 }
 
+// Check if node (and it's childs if rec == true) has child folders
 void
 FSNode::checkIfHasChilds(bool rec)
 {
@@ -220,6 +214,30 @@ FSNode::checkIfHasChilds(bool rec)
 }
 
 
+// Is path exists
+bool
+IsPathExists(fs::path path)
+{
+    std::error_code err;
+    bool res = fs::exists(path, err);
+    return !err && res;
+}
+
+// Is path exists and readable
+bool
+IsPathReadable(fs::path path)
+{
+    std::error_code err;
+    fs::file_status status = fs::status(path, err);
+    if ( err )
+    {
+        return false;
+    }
+    fs::perms perms = status.permissions();
+    return (perms & fs::perms::owner_read) != fs::perms::none;
+}
+
+// Check if nodes has child folders
 void
 CheckIfNodesHasChilds(std::vector<FSNode>& nodes, bool rec)
 {
@@ -229,6 +247,7 @@ CheckIfNodesHasChilds(std::vector<FSNode>& nodes, bool rec)
     }
 }
 
+// Get node full path
 fs::path
 GetFSNodeFullPath(FSNode const& node)
 {
@@ -263,6 +282,7 @@ GetFSNodeFullPath(FSNode const& node)
     return res;
 }
 
+// Make nodes list from path
 void
 MakeFSNodesListFromPath(std::wstring pathStr, std::vector<FSNode>& resList)
 {

@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include <windows.h>
+#include "common.h"
 
-#include <string>
+extern const wchar_t ProgramVersion[];
 
 std::wstring const& GetDesktopPath();
 std::wstring const& GetMyDocumentsPath();

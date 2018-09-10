@@ -2,14 +2,15 @@
 
 #include "common.h"
 
+#include "fsnode.h"
 #include "mainwnd_fwd.h"
 
 class TreeView
 {
 public:
+    // Get hwnd
     HWND hwnd() { return mHWnd; }
 
-public:
     void refreshContentRec(HTREEITEM parentItem, FSNode const& parentNode);
     void refreshContent();
 
@@ -17,8 +18,6 @@ public:
     LRESULT notify(NMHDR* nmhdr);
 
 private:
-
-private:
-    HWND mHWnd;
-    MainWnd* parentWnd;
+    HWND mHWnd;          // hwnd
+    MainWnd* parentWnd;  // parent window
 };

@@ -2,6 +2,8 @@
 
 #include "common.h"
 
+#include "fsnode.h"
+
 bool InitRootFSNodes();
 bool InitFSNodesTree();
 

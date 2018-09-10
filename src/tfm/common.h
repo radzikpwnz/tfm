@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <windows.h>
+#include <shlobj.h>
 #include <CommCtrl.h>
 
 #include <cassert>
@@ -10,16 +11,4 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "resource.h"
-
-#include "core.h"
-#include "env.h"
 #include "debug.h"
-#include "fsnode.h"
-#include "state.h"
-#include "stuff.h"
-
-
-extern const wchar_t ProgramVersion[];
-
-void RedirectIOToConsole();

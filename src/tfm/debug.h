@@ -13,7 +13,7 @@ public:
     };
 
 public:
-    static void init();
+    static bool init();
 
     static void setLevel(Level level) { mLevel = level; }
     

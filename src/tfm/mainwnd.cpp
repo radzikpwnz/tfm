@@ -1,15 +1,24 @@
 ﻿#include "common.h"
 
+#include "resource.h"
+#include "state.h"
+#include "core.h"
+#include "stuff.h"
+#include "env.h"
 #include "toolbar.h"
 
 #include "mainwnd.h"
 
+
+// Main window class name
 static const wchar_t MainWndClass[] = L"TFM_MainWnd";
+// Main window initial title
 static const wchar_t MainWndTitle[] = L"Tiny File Manager";
 
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// About dialog procedure
 INT_PTR CALLBACK
 AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -62,6 +71,7 @@ AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+// On current path change handler
 void
 MainWnd::onCurPathChange()
 {
@@ -70,26 +80,30 @@ MainWnd::onCurPathChange()
     SetWindowText(mHWnd, GetCurPathFSNodes().back().getDisplayName().c_str());
 }
 
+// On content update handler
 void
 MainWnd::onContentUpdate()
 {
     mContent->refreshContent();
 }
 
+// On tree element expanding handler
 void
 MainWnd::onTreeExpanding(HTREEITEM treeItem, FSNode const& node)
 {
     mTreeView->refreshContentRec(treeItem, node);
 }
 
+// On tree refresh handler
 void
 MainWnd::onTreeRefresh()
 {
     mTreeView->refreshContent();
 }
 
+// Set content view style (from menu)
 void
-MainWnd::setViewStyle(unsigned itemId)
+MainWnd::setViewStyle(unsigned itemId) // menu item id
 {
     static const unsigned viewItemIds[] = {
         ID_VIEW_LARGEICONS,
@@ -126,6 +140,7 @@ MainWnd::setViewStyle(unsigned itemId)
     }
 }
 
+// WM_COMMAND message handler
 void
 MainWnd::command(WPARAM wParam, LPARAM lParam)
 {
@@ -166,12 +181,10 @@ MainWnd::command(WPARAM wParam, LPARAM lParam)
     }
 }
 
+// Resize handler
 void
-MainWnd::resize(int width, int heigth)
+MainWnd::resize()
 {
-    UNREFERENCED_PARAMETER(width);
-    UNREFERENCED_PARAMETER(heigth);
-      
     RECT rect;
     GetClientRect(mHWnd, &rect);
 
@@ -179,13 +192,7 @@ MainWnd::resize(int width, int heigth)
     RECT toolbar_rect;
     RECT button_rect;
     SendMessage(mToolbar->hwnd(), TB_GETITEMRECT, 0, (LPARAM)&button_rect);
-    //GetClientRect(mToolbar->hwnd(), &toolbar_rect); 
-    /*SIZE size;
-    SendMessage(mToolbar->hwnd(), TB_GETMAXSIZE, 0, (LPARAM)&size);*/
-    //SendMessage(mToolbar->hwnd(), TB_SETBUTTONSIZE, 0, MAKELONG(40 - button_rect.top - 2, 40 - button_rect.top - 2));
-    //int toolbarRows = SendMessage(mToolbar->hwnd(), TB_GETROWS, 0, 0);
     SetWindowPos(mToolbar->hwnd(), NULL, 0, 0, rect.right, button_rect.bottom + 3, SWP_NOZORDER);
-    //SendMessage(mToolbar->hwnd(), TB_AUTOSIZE, 0, 0);
     GetWindowRectInParent(mToolbar->hwnd(), &toolbar_rect);
 
     // Status Bar
@@ -206,6 +213,7 @@ MainWnd::resize(int width, int heigth)
     GetWindowRectInParent(mTreeView->hwnd(), &treeview_rect);
     SetWindowPos(mTreeView->hwnd(), NULL, 0, treeviewY, treeview_rect.right, treeviewHeight, SWP_NOZORDER);
 
+    // Size bar
     RECT sizebar_rect;
     GetWindowRectInParent(mSizeBar->hwnd(), &sizebar_rect);
     SetWindowPos(mSizeBar->hwnd(), NULL, treeview_rect.right, treeviewY, sizebar_rect.right - sizebar_rect.left, treeviewHeight, SWP_NOZORDER);
@@ -215,6 +223,7 @@ MainWnd::resize(int width, int heigth)
     SetWindowPos(mContent->hwnd(), NULL, sizebar_rect.right, treeviewY, contentWidth, treeviewHeight, SWP_NOZORDER);
 }
 
+// Window procedure (internal function)
 LRESULT CALLBACK
 MainWnd::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -222,7 +231,7 @@ MainWnd::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         case WM_SIZE:
         {
-            resize(LOWORD(lParam), HIWORD(lParam));
+            resize();
             return 0;
         }
         case WM_COMMAND:
@@ -237,6 +246,7 @@ MainWnd::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         case WM_NOTIFY:
         {
+            // Call control's WM_NOTIFY handler
             NMHDR* hdr = (NMHDR*)lParam;
             if ( mContent != nullptr && hdr->hwndFrom == mContent->hwnd() )
             {
@@ -254,6 +264,7 @@ MainWnd::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+// Window procedure
 LRESULT CALLBACK
 MainWnd::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -265,6 +276,7 @@ MainWnd::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return wnd->wndProcInternal(hWnd, message, wParam, lParam);
 }
 
+// Register window class
 bool
 MainWnd::registerWindowClass()
 {
@@ -284,12 +296,14 @@ MainWnd::registerWindowClass()
     return RegisterClassExW(&wcex);
 }
 
+// Common initialization
 bool
 MainWnd::initCommon()
 {
     return registerWindowClass();
 }
 
+// Create main window instance
 MainWnd*
 MainWnd::create(HINSTANCE hInstance)
 {

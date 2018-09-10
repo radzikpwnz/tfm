@@ -1,16 +1,17 @@
-﻿#pragma comment(linker,"\"/manifestdependency:type='win32' \
+﻿// Using Common Controls Library v 6.0
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include "common.h"
 
-#include "mainwnd.h"
+#include "core.h"
+#include "env.h"
 
-
-const wchar_t ProgramVersion[] = L"v 1.0 Beta";
 
 //static HACCEL hAccelTable;
 
+// Initialization
 static bool
 Init(HINSTANCE hInstance)
 {
@@ -29,14 +30,17 @@ Init(HINSTANCE hInstance)
     return true;
 }
 
+// Program entry point
 int
 APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(nCmdShow);
 
-    Debug::init();
-    Debug::setLevel(Debug::VERBOSE);
+    /*if ( Debug::init() )
+    {
+        Debug::setLevel(Debug::VERBOSE);
+    }*/
 
     if ( !Init(hInstance) )
     {

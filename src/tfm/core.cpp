@@ -1,17 +1,21 @@
 ﻿#include "common.h"
 
 #include "mainwnd.h"
+#include "state.h"
+
+#include "core.h"
 
 
+// Global variables instance
 Globals_t Globals;
 bool Globals_t::mCreated = false;
 
 unsigned InstanceManager::mInstanceCount;
 std::mutex InstanceManager::mutex;
-
 thread_local Instance* InstanceManager::mCurInstance;
 
 
+// Parce instance arguments
 static void
 ParseArgs(std::wstring& args)
 {
@@ -27,6 +31,7 @@ ParseArgs(std::wstring& args)
     SetCurPathFromCmdlineArg(argv[0]);
 }
 
+// Instance thread entry point
 void
 Instance::entryPoint(Instance* instance)
 {
@@ -62,6 +67,7 @@ Instance::entryPoint(Instance* instance)
     InstanceManager::destroy(instance);
 }
 
+// Create new instance
 Instance*
 InstanceManager::create(std::wstring args)
 {
@@ -80,6 +86,7 @@ InstanceManager::create(std::wstring args)
     return instance;
 }
 
+// Destroy instance
 void
 InstanceManager::destroy(Instance* instance)
 {

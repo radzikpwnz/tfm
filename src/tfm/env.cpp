@@ -1,25 +1,32 @@
 ﻿#include "common.h"
 
-#include <shlobj.h>
-
 #include "env.h"
 
+
+// Program version string
+const wchar_t ProgramVersion[] = L"v 1.0 Beta";
+
+// Desktop path
 static std::wstring gDesktopPath;
+// My documents path
 static std::wstring gMyDocumentsPath;
 
 
+// Get desktop path
 std::wstring const&
 GetDesktopPath()
 {
     return gDesktopPath;
 }
 
+// Get my documents path
 std::wstring const&
 GetMyDocumentsPath()
 {
     return gMyDocumentsPath;
 }
 
+// Init environment
 void
 InitEnv()
 {

@@ -1,7 +1,6 @@
-﻿#include <windows.h>
+﻿#include "common.h"
 
-#include "common.h"
-
+#include "stuff.h"
 #include "mainwnd.h"
 
 #include "sizebar.h"
@@ -10,6 +9,7 @@
 static const wchar_t InstanceProp[] = L"INSTANCE";
 
 
+// Set mouse tracking (mouse leave event)
 void
 SizeBar::setMouseTracking()
 {
@@ -22,6 +22,7 @@ SizeBar::setMouseTracking()
     mIsTracking = true;
 }
 
+// Window procedure (internal function)
 LRESULT CALLBACK
 SizeBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -91,6 +92,7 @@ SizeBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+// Window procedure
 LRESULT CALLBACK
 SizeBar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -98,6 +100,7 @@ SizeBar::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return sizeBar->wndProcInternal(hWnd, message, wParam, lParam);
 }
 
+// Create sizebar instance
 SizeBar*
 SizeBar::create(HINSTANCE hInstance, MainWnd* parentWnd)
 {
@@ -119,7 +122,7 @@ SizeBar::create(HINSTANCE hInstance, MainWnd* parentWnd)
     sizeBar->mOrigWndProc = (WNDPROC)SetWindowLongPtr(sizeBar->mHWnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
     SetProp(sizeBar->mHWnd, InstanceProp, sizeBar);
 
-    sizeBar->parentWnd = parentWnd;
+    sizeBar->mParentWnd = parentWnd;
     UpdateWindow(sizeBar->mHWnd);
     return sizeBar;
 }

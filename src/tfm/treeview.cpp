@@ -1,13 +1,13 @@
-﻿#include <windows.h>
-#include <shlobj.h>
+﻿#include "common.h"
 
-#include "common.h"
-
+#include "fsnode.h"
+#include "state.h"
 #include "mainwnd.h"
 
 #include "treeview.h"
 
 
+// Clear and rebuild all item childs
 void
 TreeView::refreshContentRec(HTREEITEM parentItem, FSNode const& parentNode)
 {
@@ -51,6 +51,7 @@ TreeView::refreshContentRec(HTREEITEM parentItem, FSNode const& parentNode)
     }
 }
 
+// Clear and rebuild all content
 void
 TreeView::refreshContent()
 {
@@ -104,28 +105,7 @@ TreeView::refreshContent()
 
 }
 
-TreeView*
-TreeView::create(HINSTANCE hInstance, MainWnd* parentWnd)
-{
-    TreeView* treeView = new TreeView();
-
-    treeView->mHWnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-                                     WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS,
-                                     0, 0, 0, 0,
-                                     parentWnd->hwnd(), (HMENU)NULL, hInstance, NULL);
-
-    if ( treeView->mHWnd == NULL )
-    {
-        return nullptr;
-    }
-
-    treeView->refreshContent();
-
-    treeView->parentWnd = parentWnd;
-    UpdateWindow(treeView->mHWnd);
-    return treeView;
-}
-
+// WM_NOTIFY message handler
 LRESULT
 TreeView::notify(NMHDR* nmhdr)
 {
@@ -164,4 +144,27 @@ TreeView::notify(NMHDR* nmhdr)
     }
 
     return 0;
+}
+
+// Create tree-view instance
+TreeView*
+TreeView::create(HINSTANCE hInstance, MainWnd* parentWnd)
+{
+    TreeView* treeView = new TreeView();
+
+    treeView->mHWnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
+                                     WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS,
+                                     0, 0, 0, 0,
+                                     parentWnd->hwnd(), (HMENU)NULL, hInstance, NULL);
+
+    if ( treeView->mHWnd == NULL )
+    {
+        return nullptr;
+    }
+
+    treeView->refreshContent();
+
+    treeView->parentWnd = parentWnd;
+    UpdateWindow(treeView->mHWnd);
+    return treeView;
 }
