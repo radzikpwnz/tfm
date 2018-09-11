@@ -390,6 +390,11 @@ ContentView::actCreateLink()
         srcPaths.push_back(GetFSNodeFullPath(*mSelItems[i].fsnode));
     }
 
+    if ( srcPaths.empty() )
+    {
+        return;
+    }
+
     CreateShortcuts(srcPaths, dstPath);
 }
 
@@ -404,6 +409,10 @@ ContentView::actDelete()
         srcPaths.push_back(GetFSNodeFullPath(*mSelItems[i].fsnode));
     }
 
+    if ( srcPaths.empty() )
+    {
+        return;
+    }
     DeleteFiles(srcPaths);
     NavigateRefresh();
     //TreeFullRefresh();
@@ -446,6 +455,10 @@ ContentView::actRename()
 void
 ContentView::actPaste()
 {
+    if ( GetClipboard().empty() )
+    {
+        return;
+    }
     PasteFiles(GetCurPath());
     NavigateRefresh();
 }
@@ -454,6 +467,10 @@ ContentView::actPaste()
 void
 ContentView::actPasteAsLink()
 {
+    if ( GetClipboard().empty() )
+    {
+        return;
+    }
     CreateShortcuts(GetClipboard(), GetCurPath());
     NavigateRefresh();
 }

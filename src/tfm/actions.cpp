@@ -160,7 +160,6 @@ FileOpAsyncAction::workerEntryPointInternal()
         {
             SetWindowText(GetDlgItem(mHDlg, IDC_CURFILE), mSrcPaths[i].c_str());
 
-            // FIXME: std::filesystem realization doesn't work under Wine
             /*std::error_code err;
             if ( !fs::remove_all(mSrcPaths[i], err) || err )
             {
@@ -213,7 +212,6 @@ FileOpAsyncAction::workerEntryPointInternal()
 
             if ( mType == ACT_COPY )
             {
-                // FIXME: std::filesystem realization doesn't work under Wine
                 /*std::error_code err;
                 fs::copy(curSrc, curDst, err);
                 if ( err )
@@ -244,11 +242,31 @@ FileOpAsyncAction::workerEntryPointInternal()
                 }
             } else
             {
-                std::error_code err;
+                /*std::error_code err;
                 fs::rename(curSrc, curDst, err);
                 if ( err )
                 {
                     Debug::logErr(L"Error moving %s to %s, err %d\n", curSrc.c_str(), curDst.c_str(), err.value());
+                    SendMessage(mHDlg, MSG_ERROR, 0, 0);
+                    break;
+                }*/
+
+                // Prepare paths for SHFILEOPSTRUCT format (double null-terminate)
+                std::wstring curSrcFixed = curSrc.wstring();
+                curSrcFixed.resize(curSrcFixed.length() + 2);
+                std::wstring dstFixed = mDstPath.wstring();
+                dstFixed.resize(dstFixed.length() + 2);
+
+                SHFILEOPSTRUCT s = { 0 };
+                s.hwnd = mHDlg;
+                s.wFunc = FO_MOVE;
+                s.fFlags = FOF_SILENT;
+                s.pTo = dstFixed.c_str();
+                s.pFrom = curSrcFixed.c_str();
+                int res = SHFileOperation(&s);
+                if ( res != 0 )
+                {
+                    Debug::logErr(L"Error moving %s to %s, err %d\n", curSrc.c_str(), curDst.c_str(), GetLastError());
                     SendMessage(mHDlg, MSG_ERROR, 0, 0);
                     break;
                 }
@@ -323,6 +341,11 @@ SetClipboardIsCut(bool val)
 bool
 PasteFiles(fs::path dstPath)
 {
+    if ( gClipboard.empty() )
+    {
+        return true;
+    }
+
     FileOpAsyncAction* act = new FileOpAsyncAction(gClipboardIsCut ? FileOpAsyncAction::ACT_MOVE : FileOpAsyncAction::ACT_COPY);
 
     act->setSrcPaths(gClipboard);
@@ -342,6 +365,11 @@ PasteFiles(fs::path dstPath)
 bool
 DeleteFiles(std::vector<fs::path> const& srcPaths)
 {
+    if ( srcPaths.empty() )
+    {
+        return true;
+    }
+
     FileOpAsyncAction* act = new FileOpAsyncAction(FileOpAsyncAction::ACT_DELETE);
 
     act->setSrcPaths(srcPaths);
