@@ -139,7 +139,7 @@ TreeView::notify(NMHDR* nmhdr)
             ScreenToClient(mHWnd, &hti.pt);
             TreeView_HitTest(mHWnd, &hti);
 
-            if ( hti.hItem != NULL && (hti.flags & TVHT_ONITEM) && mHOpenedItem != hti.hItem )
+            if ( hti.hItem != NULL && (hti.flags & TVHT_ONITEM)/* && mHOpenedItem != hti.hItem*/ )
             {
                 TVITEM item;
                 item.hItem = hti.hItem;

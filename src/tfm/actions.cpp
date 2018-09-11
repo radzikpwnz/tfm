@@ -150,6 +150,8 @@ FileOpAsyncAction::dlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 void
 FileOpAsyncAction::workerEntryPointInternal()
 {
+    std::chrono::time_point<std::chrono::steady_clock> lastRefreshTime = std::chrono::steady_clock::now();
+
     if ( mType == ACT_DELETE )
     {
         SetWindowText(mHDlg, L"Deleting files...");
@@ -185,7 +187,12 @@ FileOpAsyncAction::workerEntryPointInternal()
                 break;
             }
 
-            SendMessage(mHDlg, MSG_NAVIGATE_REFRESH, 0, 0);
+            std::chrono::time_point<std::chrono::steady_clock> curTime = std::chrono::steady_clock::now();
+            if ( std::chrono::duration_cast<std::chrono::milliseconds>(curTime - lastRefreshTime).count() >= 3000 )
+            {
+                SendMessage(mHDlg, MSG_NAVIGATE_REFRESH, 0, 0);
+                lastRefreshTime = curTime;
+            }
 
             if ( mCancel )
             {
@@ -247,7 +254,12 @@ FileOpAsyncAction::workerEntryPointInternal()
                 }
             }
 
-            SendMessage(mHDlg, MSG_NAVIGATE_REFRESH, 0, 0);
+            auto curTime = std::chrono::steady_clock::now();
+            if ( std::chrono::duration_cast<std::chrono::milliseconds>(curTime - lastRefreshTime).count() >= 3000 )
+            {
+                SendMessage(mHDlg, MSG_NAVIGATE_REFRESH, 0, 0);
+                lastRefreshTime = curTime;
+            }
 
             if ( mCancel )
             {
