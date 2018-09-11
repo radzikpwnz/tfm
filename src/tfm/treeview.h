@@ -18,6 +18,7 @@ public:
     LRESULT notify(NMHDR* nmhdr);
 
 private:
-    HWND mHWnd;          // hwnd
-    MainWnd* parentWnd;  // parent window
+    HWND mHWnd;             // hwnd
+    MainWnd* mParentWnd;    // parent window
+    HTREEITEM mHOpenedItem; // opened (in content view) item handle
 };

@@ -11,6 +11,8 @@
 #define IDD_ABOUT                       109
 #define IDD_INPUT                       111
 #define IDD_FILEOP_PROGRESS             113
+#define IDI_SMALL                       115
+#define IDI_MAIN                        115
 #define IDC_ABOUT_VERSION               1001
 #define IDC_ABOUT_HEADER                1002
 #define IDC_TEXT                        1003
@@ -19,6 +21,8 @@
 #define IDC_PROGRESS_TOTAL              1006
 #define IDC_CURFILE                     1007
 #define IDC_CANCEL                      1008
+#define IDC_SYSLINK1                    1009
+#define IDC_ELTECHSCOM                  1009
 #define ID_FILE_NEWWINDOW               40001
 #define ID_EDIT_CUT                     40002
 #define ID_EDIT_COPY                    40003
@@ -37,9 +41,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        115
+#define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40013
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

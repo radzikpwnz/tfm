@@ -59,10 +59,20 @@ AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         }
         case WM_COMMAND:
         {
-            if ( LOWORD(wParam) == IDOK )
+            if ( LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL )
             {
                 EndDialog(hDlg, LOWORD(wParam));
                 return (INT_PTR)TRUE;
+            }
+            break;
+        }
+        case WM_NOTIFY:
+        {
+            NMHDR* hdr = (NMHDR*)lParam;
+            if ( hdr->idFrom == IDC_ELTECHSCOM && hdr->code == NM_CLICK )
+            {
+                NMLINK* link = (NMLINK*)hdr;
+                ShellExecute(NULL, L"open", link->item.szUrl, NULL, NULL, SW_SHOW);
             }
             break;
         }
@@ -290,7 +300,7 @@ MainWnd::registerWindowClass()
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDR_MAIN_MENU);
     wcex.lpszClassName = MainWndClass;
-    //wcex.hIcon = LoadIcon(Globals::getHInstance(), MAKEINTRESOURCE(IDI_TFM));
+    wcex.hIcon = LoadIcon(Globals.getHInstance(), MAKEINTRESOURCE(IDI_MAIN));
     //wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);

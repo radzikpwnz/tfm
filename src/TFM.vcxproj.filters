@@ -144,5 +144,8 @@
     <Image Include="tfm\icons\btn_nav_special.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="tfm\icons\main.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

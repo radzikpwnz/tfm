@@ -1,5 +1,7 @@
 ﻿#include "common.h"
 
+#include <shlwapi.h>
+
 #include "fsnode.h"
 #include "state.h"
 #include "env.h"
@@ -131,7 +133,7 @@ ContentView::refreshContent()
 
     LVITEM item;
 
-    item.pszText = LPSTR_TEXTCALLBACK;
+    //item.pszText = LPSTR_TEXTCALLBACK;
     item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE | LVIF_PARAM;
     item.stateMask = 0;
     item.iSubItem = 0;
@@ -153,10 +155,29 @@ ContentView::refreshContent()
             ListView_SetImageList(mHWnd, himl, LVSIL_SMALL);
         }
 
+        item.pszText = const_cast<wchar_t*>(&node.getDisplayName()[0]);
+
         item.iItem = i;
+        item.iSubItem = 0;
         item.iImage = sfi.iIcon;
         item.lParam = (LPARAM)&node;
         ListView_InsertItem(mHWnd, &item);
+
+        if ( node.getType() == FSNode::FILE )
+        {
+            std::error_code err;
+            uint64_t fileSize = fs::file_size(filePath, err);
+            if ( !err )
+            {
+                wchar_t sizeBuf[16];
+                StrFormatByteSizeW(fileSize, sizeBuf, 16);
+                ListView_SetItemText(mHWnd, i, 1, sizeBuf);
+            }
+        }
+
+        SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_TYPENAME);
+        ListView_SetItemText(mHWnd, i, 2, sfi.szTypeName);
+
     }
 
     //ListView_SortItems(mHWnd, NodesCompareFunc, 0);
@@ -475,18 +496,18 @@ ContentView::insertColumns()
 {
     LVCOLUMN column = {};
     column.mask = LVCF_WIDTH | LVCF_TEXT;
-    column.cx = 200;
+    column.cx = 220;
     column.pszText = L"File";
     ListView_InsertColumn(mHWnd, 0, &column);
     column.cx = 70;
     column.pszText = L"Size";
     ListView_InsertColumn(mHWnd, 1, &column);
-    column.cx = 120;
+    column.cx = 130;
     column.pszText = L"Type";
     ListView_InsertColumn(mHWnd, 2, &column);
-    column.cx = 120;
+    /*column.cx = 120;
     column.pszText = L"Modified";
-    ListView_InsertColumn(mHWnd, 3, &column);
+    ListView_InsertColumn(mHWnd, 3, &column);*/
 }
 
 // Create content view instance

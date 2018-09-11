@@ -56,6 +56,7 @@ void
 TreeView::refreshContent()
 {
     TreeView_DeleteAllItems(mHWnd);
+    mHOpenedItem = NULL;
 
     TVINSERTSTRUCT is;
     is.hParent = NULL;
@@ -131,16 +132,36 @@ TreeView::notify(NMHDR* nmhdr)
             }
             return FALSE;
         }
-        case TVN_SELCHANGED:
+        case NM_CLICK:
         {
-            NMTREEVIEW* nmt = (NMTREEVIEW*)nmhdr;
-            FSNode* fsnode = (FSNode*)nmt->itemNew.lParam;
-            if ( nmt->action == TVC_BYMOUSE )
+            TVHITTESTINFO hti;
+            GetCursorPos(&hti.pt);
+            ScreenToClient(mHWnd, &hti.pt);
+            TreeView_HitTest(mHWnd, &hti);
+
+            if ( hti.hItem != NULL && (hti.flags & TVHT_ONITEM) && mHOpenedItem != hti.hItem )
             {
+                TVITEM item;
+                item.hItem = hti.hItem;
+                item.mask = TVIF_PARAM;
+                TreeView_GetItem(mHWnd, &item);
+                FSNode* fsnode = (FSNode*)item.lParam;
+                mHOpenedItem = hti.hItem;
                 NavigateFromTree(fsnode);
             }
             break;
         }
+        /*case TVN_SELCHANGED:
+        {
+            NMTREEVIEW* nmt = (NMTREEVIEW*)nmhdr;
+            FSNode* fsnode = (FSNode*)nmt->itemNew.lParam;
+            if ( nmt->action == TVC_BYMOUSE && mHOpenedItem != nmt->itemNew.hItem )
+            {
+                mHOpenedItem = nmt->itemNew.hItem;
+                NavigateFromTree(fsnode);
+            }
+            break;
+        }*/
     }
 
     return 0;
@@ -164,7 +185,7 @@ TreeView::create(HINSTANCE hInstance, MainWnd* parentWnd)
 
     treeView->refreshContent();
 
-    treeView->parentWnd = parentWnd;
+    treeView->mParentWnd = parentWnd;
     UpdateWindow(treeView->mHWnd);
     return treeView;
 }
