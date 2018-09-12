@@ -8,4 +8,4 @@ To build TFM you will need Visual Studio 2017 with following components installe
 * Desktop development with C++ workload
 * Windows XP support for C++
 * Windows Universal CRT SDK
-* Windows 8.1 SDK (if resource compiler is not working correctly)
+* Windows 8.1 SDK (if resource compiler doesn't work correctly)
