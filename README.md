@@ -3,6 +3,10 @@ Lightweight file manager for Windows.
 
 ![Alt text](doc/screenshot.jpg)
 
+## System requirements
+* Windows XP SP3 and newer
+* Visual C++ Redistributable for Visual Studio 2015
+
 ## How to build
 To build TFM you will need Visual Studio 2017 with following components installed:
 * Desktop development with C++ workload
