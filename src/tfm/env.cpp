@@ -24,7 +24,7 @@
 
 
 // Program version string
-const wchar_t ProgramVersion[] = L"v 1.0.0";
+const wchar_t ProgramVersion[] = L"v 1.0.1";
 
 // Windows path
 static std::wstring gWindowsPath;
