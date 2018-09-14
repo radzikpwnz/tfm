@@ -66,10 +66,12 @@ NavBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 path.resize(len);
                 setAddrEditMode(false);
                 SetCurPathFromCmdlineArg(path);
+                SetFocus(mParentWnd->getContentView()->hwnd());
             } else if ( hwnd == mRefreshHWnd )
             {
                 NavigateRefresh();
                 //TreeFullRefresh();
+                SetFocus(mParentWnd->getContentView()->hwnd());
             } else if ( hwnd == 0 )
             {
                 MENUITEMINFO item;
@@ -84,6 +86,7 @@ NavBar::wndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     NavigateUp(node);
                 }
+                SetFocus(mParentWnd->getContentView()->hwnd());
             }
 
             return 0;
@@ -124,6 +127,7 @@ NavBar::addrWndProcInternal(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             } else
             {
                 NavigateUp(button.fsnode);
+                SetFocus(mParentWnd->getContentView()->hwnd());
             }
             return 0;
         }
@@ -451,7 +455,7 @@ NavBar::create(HINSTANCE hInstance, MainWnd* parentWnd)
     navBar->initAddrButtons();
     navBar->setAddrEditMode(false);
 
-    navBar->parentWnd = parentWnd;
+    navBar->mParentWnd = parentWnd;
     UpdateWindow(navBar->mHWnd);
     return navBar;
 }

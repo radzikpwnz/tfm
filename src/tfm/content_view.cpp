@@ -34,6 +34,7 @@
 
 // Context menu elements
 ContentView::CtxMenuElem ContentView::ctxOpen =         { L"Open",             &ContentView::actOpen };
+ContentView::CtxMenuElem ContentView::ctxEdit =         { L"Edit",             &ContentView::actEdit };
 ContentView::CtxMenuElem ContentView::ctxCut =          { L"Cut",              &ContentView::actCut };
 ContentView::CtxMenuElem ContentView::ctxCopy =         { L"Copy",             &ContentView::actCopy };
 ContentView::CtxMenuElem ContentView::ctxCreateLink =   { L"Create link",      &ContentView::actCreateLink };
@@ -120,12 +121,7 @@ ContentView::getSelectedItems(std::vector<SelItem>& resList) // destination list
     int pos = ListView_GetNextItem(mHWnd, -1, LVNI_SELECTED);
     while ( pos != -1 )
     {
-        LVITEM item;
-        item.iItem = pos;
-        item.mask = LVIF_PARAM;
-        ListView_GetItem(mHWnd, &item);
-
-        FSNode* fsnode = (FSNode*)item.lParam;
+        FSNode const* fsnode = mItems[pos].fsnode;
         typeMask |= 1 << fsnode->getType();
         resList.push_back({ pos, fsnode });
 
@@ -135,72 +131,48 @@ ContentView::getSelectedItems(std::vector<SelItem>& resList) // destination list
     return typeMask;
 }
 
-/*static int CALLBACK
-NodesCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-    FSNode* node1 = (FSNode*)lParam1;
-    FSNode* node2 = (FSNode*)lParam2;
-    if (  )
-}*/
-
 // Clean and rebuild all content
 void
 ContentView::refreshContent()
 {
-    ListView_DeleteAllItems(mHWnd);
-
     std::vector<FSNode> const& nodes = GetCurContentFSNodes();
 
-    LVITEM item;
+    mItems.clear();
+    mItems.resize(nodes.size());
+    ListView_SetItemCountEx(mHWnd, 0, 0);
+    UpdateWindow(mHWnd);
 
-    //item.pszText = LPSTR_TEXTCALLBACK;
-    item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_STATE | LVIF_PARAM;
-    item.stateMask = 0;
-    item.iSubItem = 0;
-    item.state = 0;
+    HIMAGELIST himl = 0;
 
     for ( unsigned i = 0; i < nodes.size(); i++ )
     {
-        FSNode const& node = nodes[i];
+        Item& item = mItems[i];
+        item.fsnode = nullptr;
 
-        SHFILEINFO sfi;
-        fs::path filePath = GetCurPath() / node.getRelPath();
-        if ( mViewStyle == LARGE_ICON )
+        if ( himl == 0 )
         {
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_ICON);
-            ListView_SetImageList(mHWnd, himl, LVSIL_NORMAL);
-        } else
-        {
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
-            ListView_SetImageList(mHWnd, himl, LVSIL_SMALL);
-        }
-
-        item.pszText = const_cast<wchar_t*>(&node.getDisplayName()[0]);
-
-        item.iItem = i;
-        item.iSubItem = 0;
-        item.iImage = sfi.iIcon;
-        item.lParam = (LPARAM)&node;
-        ListView_InsertItem(mHWnd, &item);
-
-        if ( node.getType() == FSNode::FILE )
-        {
-            std::error_code err;
-            uint64_t fileSize = fs::file_size(filePath, err);
-            if ( !err )
+            FSNode const& node = nodes[i];
+            SHFILEINFO sfi;
+            fs::path filePath = GetCurPath() / node.getRelPath();
+            if ( mViewStyle == LARGE_ICON )
             {
-                wchar_t sizeBuf[16];
-                StrFormatByteSizeW(fileSize, sizeBuf, 16);
-                ListView_SetItemText(mHWnd, i, 1, sizeBuf);
+                himl = (HIMAGELIST)SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_ICON);
+            } else
+            {
+                himl = (HIMAGELIST)SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON);
             }
         }
-
-        SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_TYPENAME);
-        ListView_SetItemText(mHWnd, i, 2, sfi.szTypeName);
-
     }
 
-    //ListView_SortItems(mHWnd, NodesCompareFunc, 0);
+    if ( mViewStyle == LARGE_ICON )
+    {
+        ListView_SetImageList(mHWnd, himl, LVSIL_NORMAL);
+    } else
+    {
+        ListView_SetImageList(mHWnd, himl, LVSIL_SMALL);
+    }
+
+    ListView_SetItemCountEx(mHWnd, nodes.size(), 0);
 }
 
 // Insert element in current context menu
@@ -241,7 +213,14 @@ ContentView::createContextMenu(ContextMenuType type)
     {
         if ( type == MENU_SINGLE )
         {
-            insertCtxMenuElem(id++, &ctxOpen, true);
+            if ( mSelItems[0].fsnode->getType() == FSNode::FILE )
+            {
+                insertCtxMenuElem(id++, &ctxOpen);
+                insertCtxMenuElem(id++, &ctxEdit, true);
+            } else
+            {
+                insertCtxMenuElem(id++, &ctxOpen, true);
+            }
         }
         insertCtxMenuElem(id++, &ctxCut);
         insertCtxMenuElem(id++, &ctxCopy, true);
@@ -272,24 +251,68 @@ ContentView::notify(NMHDR* nmhdr)
         case LVN_GETDISPINFO:
         {
             NMLVDISPINFO* info = (NMLVDISPINFO*)nmhdr;
-            FSNode* fsnode = (FSNode*)info->item.lParam;
+            UINT mask = info->item.mask;
+            Item& item = mItems[info->item.iItem];
 
-            switch ( info->item.iSubItem )
+            if ( item.fsnode == nullptr )
             {
-                case 0:
-                    info->item.pszText = const_cast<wchar_t*>(&fsnode->getDisplayName()[0]);
-                    break;
-                case 1:
-                    info->item.pszText = L"";
-                    break;
-                case 2:
-                    info->item.pszText = L"";
-                    break;
-                case 3:
-                    info->item.pszText = L"";
-                    break;
-                default:
-                    break;
+                FSNode const& node = GetCurContentFSNodes()[info->item.iItem];
+                item.fsnode = &node;
+
+                SHFILEINFO sfi;
+                fs::path filePath = GetCurPath() / node.getRelPath();
+                if ( mViewStyle == LARGE_ICON )
+                {
+                    SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_TYPENAME);
+                } else
+                {
+                    SHGetFileInfo(filePath.c_str(), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_TYPENAME);
+                }
+
+                item.text = node.getDisplayName();
+                item.image = sfi.iIcon;
+                item.size.resize(0);
+
+                if ( node.getType() == FSNode::FILE )
+                {
+                    std::error_code err;
+                    uint64_t fileSize = fs::file_size(filePath, err);
+                    if ( !err )
+                    {
+                        item.size.resize(16);
+                        StrFormatByteSizeW(fileSize, &item.size[0], 16);
+                    }
+                }
+
+                item.type = sfi.szTypeName;
+            }
+
+            if ( mask & LVIF_STATE )
+            {
+                info->item.state = 0;
+            }
+
+            if ( mask & LVIF_IMAGE )
+            {
+                info->item.iImage = item.image;
+            }
+
+            if ( mask & LVIF_TEXT )
+            {
+                switch ( info->item.iSubItem )
+                {
+                    case 0:
+                        info->item.pszText = const_cast<wchar_t*>(&item.text[0]);
+                        break;
+                    case 1:
+                        info->item.pszText = const_cast<wchar_t*>(&item.size[0]);
+                        break;
+                    case 2:
+                        info->item.pszText = const_cast<wchar_t*>(&item.type[0]);
+                        break;
+                    default:
+                        break;
+                }
             }
             break;
         }
@@ -303,13 +326,7 @@ ContentView::notify(NMHDR* nmhdr)
                 break;
             }
 
-            LVITEM item;
-            item.iItem = ia->iItem;
-            item.iSubItem = ia->iSubItem;
-            item.mask = LVIF_PARAM;
-            ListView_GetItem(mHWnd, &item);
-
-            FSNode* fsnode = (FSNode*)item.lParam;
+            FSNode const* fsnode = mItems[ia->iItem].fsnode;
             if ( fsnode->getType() == FSNode::DIR || fsnode->getType() == FSNode::LOGICAL_DRIVE )
             {
                 NavigateDown(fsnode->getRelPath());
@@ -357,7 +374,7 @@ ContentView::actOpen()
         return;
     }
 
-    FSNode* fsnode = mSelItems[0].fsnode;
+    FSNode const* fsnode = mSelItems[0].fsnode;
 
     if ( fsnode->getType() == FSNode::DIR )
     {
@@ -366,6 +383,27 @@ ContentView::actOpen()
     }
 
     ShellExecute(mParentWnd->hwnd(), L"open", &GetFSNodeFullPath(*fsnode).wstring()[0], nullptr, &GetCurPath().wstring()[0], SW_SHOW);
+}
+
+// "Edit" action
+void
+ContentView::actEdit()
+{
+    if ( mSelItems.size() != 1 )
+    {
+        return;
+    }
+
+    FSNode const* fsnode = mSelItems[0].fsnode;
+
+    if ( fsnode->getType() != FSNode::FILE )
+    {
+        return;
+    }
+
+    fs::path editorPath = fs::path(GetWindowsPath()) / L"notepad.exe";
+    std::wstring filePathQuotes = L"\"" + GetFSNodeFullPath(*fsnode).wstring() + L"\"";
+    ShellExecute(mParentWnd->hwnd(), L"open", &editorPath.wstring()[0], &filePathQuotes[0], &GetCurPath().wstring()[0], SW_SHOW);
 }
 
 // "Cut" action
@@ -447,7 +485,7 @@ ContentView::actRename()
         return;
     }
 
-    FSNode* fsnode = mSelItems[0].fsnode;
+    FSNode const* fsnode = mSelItems[0].fsnode;
     if ( fsnode->getType() != FSNode::DIR && fsnode->getType() != FSNode::FILE )
     {
         return;
@@ -554,7 +592,7 @@ ContentView::create(HINSTANCE hInstance, MainWnd* parentWnd)
     ContentView* contentView = new ContentView();
 
     contentView->mHWnd = CreateWindowEx(0, WC_LISTVIEW, NULL,
-                                        WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER | LVS_REPORT | LVS_SHAREIMAGELISTS,
+                                        WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER | LVS_OWNERDATA | LVS_REPORT | LVS_SHAREIMAGELISTS,
                                         0, 0, 0, 0,
                                         parentWnd->hwnd(), (HMENU)NULL, hInstance, NULL);
 

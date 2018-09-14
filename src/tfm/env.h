@@ -24,6 +24,7 @@
 
 extern const wchar_t ProgramVersion[];
 
+std::wstring const& GetWindowsPath();
 std::wstring const& GetDesktopPath();
 std::wstring const& GetMyDocumentsPath();
 

@@ -47,6 +47,16 @@ public:
     };
 
 private:
+    // Item
+    struct Item
+    {
+        FSNode const* fsnode;
+        int image;
+        std::wstring text;
+        std::wstring size;
+        std::wstring type;
+    };
+
     // Context menu element
     struct CtxMenuElem
     {
@@ -57,12 +67,13 @@ private:
     // Selected item
     struct SelItem
     {
-        int id;         // id (in list-view context)
-        FSNode* fsnode; // FSNode
+        int id;               // id (in list-view context)
+        FSNode const* fsnode; // FSNode
     };
 
 private:
     static CtxMenuElem ctxOpen;
+    static CtxMenuElem ctxEdit;
     static CtxMenuElem ctxCut;
     static CtxMenuElem ctxCopy;
     static CtxMenuElem ctxCreateLink;
@@ -95,6 +106,7 @@ public:
     LRESULT notify(NMHDR* nmhdr);
 
     void actOpen();
+    void actEdit();
     void actCut();
     void actCopy();
     void actCreateLink();
@@ -119,6 +131,7 @@ private:
     MainWnd* mParentWnd;            // parent window
     WNDPROC mOrigWndProc;           // orig window procedure
     ViewStyle mViewStyle;           // view style
+    std::vector<Item> mItems;       // items
     std::vector<SelItem> mSelItems; // selected items list
     HMENU mCtxMenuHandle;           // context menu handle
 };

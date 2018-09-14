@@ -26,11 +26,20 @@
 // Program version string
 const wchar_t ProgramVersion[] = L"v 1.0.0";
 
+// Windows path
+static std::wstring gWindowsPath;
 // Desktop path
 static std::wstring gDesktopPath;
 // My documents path
 static std::wstring gMyDocumentsPath;
 
+
+// Get windows path
+std::wstring const&
+GetWindowsPath()
+{
+    return gWindowsPath;
+}
 
 // Get desktop path
 std::wstring const&
@@ -51,6 +60,9 @@ void
 InitEnv()
 {
     wchar_t path[MAX_PATH];
+
+    SHGetFolderPath(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, path);
+    gWindowsPath = path;
 
     SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, path);
     gDesktopPath = path;

@@ -83,7 +83,7 @@ private:
 
 private:
     HWND mHWnd;                            // hwnd
-    MainWnd* parentWnd;                    // parent window
+    MainWnd* mParentWnd;                   // parent window
     WNDPROC mOrigWndProc;                  // orig window procedure
     WNDPROC mAddrOrigWndProc;              // address window orig window procedure
 

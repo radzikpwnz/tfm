@@ -401,7 +401,7 @@ DeleteFiles(std::vector<fs::path> const& srcPaths)
 
 // Create one shortcut
 static bool
-CreateShortcut(std::wstring const& src, std::wstring const& dst)
+CreateShortcut(fs::path const& src, fs::path const& dst)
 {
     HRESULT hres;
 
@@ -411,6 +411,7 @@ CreateShortcut(std::wstring const& src, std::wstring const& dst)
     if ( SUCCEEDED(hres) )
     {
         psl->SetPath(src.c_str());
+        psl->SetWorkingDirectory(src.parent_path().c_str());
         psl->SetDescription(L"");
 
         IPersistFile* ppf;
